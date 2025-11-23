@@ -26,23 +26,86 @@ jobs:
           RUN_ID: ${{ github.event.client_payload.run_id }}
           GH_TOKEN: ${{ secrets.SOURCE_READ_TOKEN }} # fine-grained PAT with Actions: read on source repo
         run: |
+          set -e  # Exit immediately if any command fails
+          
+          # Initial cleanup
+          echo "🔄 Starting artifact deployment at $(date)"
+          rm -f artifact.zip
+          
+          # Ensure dist directory exists
           mkdir -p dist
-          # Download artifact using the API
-          # 1) List artifacts for the run
+          
+          # 1) Fetch artifact metadata
+          echo "🔍 Fetching artifacts for run $RUN_ID..."
           ARTIFACT_URL="https://api.github.com/repos/$OWNER/${REPO#*/}/actions/runs/$RUN_ID/artifacts"
-          ARTIFACT_ID=$(curl -s -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" "$ARTIFACT_URL" | jq -r '.artifacts[] | select(.name=="dist") | .id')
-          if [ -z "$ARTIFACT_ID" ]; then echo "Artifact 'dist' not found"; exit 1; fi
+          
+          # Add retry logic for API request
+          MAX_RETRIES=3
+          RETRY_DELAY=5
+          for i in $(seq 1 $MAX_RETRIES); do
+            if RESPONSE=$(curl -s -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" "$ARTIFACT_URL"); then
+              break
+            fi
+            if [ $i -eq $MAX_RETRIES ]; then
+              echo "❌ Failed to fetch artifacts after $MAX_RETRIES attempts"
+              exit 1
+            fi
+            echo "⚠️ Attempt $i failed, retrying in $RETRY_DELAY seconds..."
+            sleep $RETRY_DELAY
+          done
 
-          # 2) Download the artifact archive
+          # Extract artifact ID with better error handling
+          ARTIFACT_ID=$(echo "$RESPONSE" | jq -r '.artifacts[] | select(.name=="dist") | .id')
+          if [ -z "$ARTIFACT_ID" ]; then 
+            echo "❌ Artifact 'dist' not found in run $RUN_ID"
+            echo "Available artifacts:"
+            echo "$RESPONSE" | jq '.artifacts[].name'
+            exit 1
+          fi
+
+          # 2) Download artifact
+          echo "📥 Downloading artifact $ARTIFACT_ID..."
           DOWNLOAD_URL="https://api.github.com/repos/$OWNER/${REPO#*/}/actions/artifacts/$ARTIFACT_ID/zip"
-          curl -L -s -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" "$DOWNLOAD_URL" -o artifact.zip
+          
+          if ! curl -L -f -s -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
+              -o artifact.zip "$DOWNLOAD_URL"; then
+            echo "❌ Failed to download artifact"
+            exit 1
+          fi
 
-          # 3) Extract into dist/
-          unzip -q artifact.zip -d dist
+          # Verify download size
+          FILESIZE=$(stat -c%s "artifact.zip")
+          if [ "$FILESIZE" -lt 100 ]; then
+            echo "❌ Downloaded file is too small (${FILESIZE} bytes), likely an error"
+            rm -f artifact.zip
+            exit 1
+          fi
 
-      - name: Sync dist into repo
-        run: |
-          rsync -av --delete ./dist/ ./dist/
+          # 3) Clean and extract
+          echo "🧹 Cleaning destination directory..."
+          rm -rf dist/*
+          
+          echo "📦 Extracting artifact..."
+          if ! unzip -q artifact.zip -d dist; then
+            echo "❌ Failed to extract artifact"
+            rm -rf dist/*
+            rm -f artifact.zip
+            exit 1
+          fi
+
+          # Verify extraction
+          if [ -z "$(ls -A dist)" ]; then
+            echo "❌ Extraction completed but dist directory is empty"
+            rm -rf dist/*
+            rm -f artifact.zip
+            exit 1
+          fi
+
+          # Cleanup and finalize
+          rm -f artifact.zip
+          echo "✅ Success! Artifact downloaded and extracted to dist/"
+          echo "   Extracted files:"
+          find dist -type f | sed 's/^/   - /'
 
       - name: Commit and push
         run: |
