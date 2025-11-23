@@ -4,7 +4,6 @@ on:
     types: [deploy_dist]
 
 permissions:
-  contents: write
   actions: read
 
 jobs:
