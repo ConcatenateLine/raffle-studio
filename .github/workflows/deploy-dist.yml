@@ -16,8 +16,8 @@ jobs:
 
       - name: Configure bot identity
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config user.name "Concatenate Line [bot]"
+          git config user.email "bot@concatenateline.dev"
 
       - name: Download artifact from source run
         env:
@@ -109,9 +109,6 @@ jobs:
 
       - name: Commit and push
         run: |
-          git config --global user.name "Concatenate Line [bot]"
-          git config --global user.email "bot@concatenateline.dev"
-
           DEFAULT_BRANCH=$(git remote show origin | sed -n '/HEAD branch/s/.*: //p')
           git checkout -B "$DEFAULT_BRANCH"
           git add .
