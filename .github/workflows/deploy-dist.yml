@@ -4,6 +4,7 @@ on:
     types: [deploy_dist]
 
 permissions:
+  contents: read
   actions: read
 
 jobs:
@@ -23,7 +24,7 @@ jobs:
           OWNER: ${{ github.event.client_payload.source_owner }}
           REPO: ${{ github.event.client_payload.source_repo }}
           RUN_ID: ${{ github.event.client_payload.run_id }}
-          GH_TOKEN: ${{ secrets.SOURCE_READ_TOKEN }} # fine-grained PAT with Actions: read on source repo
+          GH_TOKEN: ${{ secrets.SOURCE_READ_TOKEN }} # fine-grained PAT with Actions & contents: read on source repo
         run: |
           set -e  # Exit immediately if any command fails
           
