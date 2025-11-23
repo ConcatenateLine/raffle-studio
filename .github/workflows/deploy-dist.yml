@@ -42,7 +42,7 @@ jobs:
 
       - name: Sync dist into repo
         run: |
-          rsync -av --delete ./dist/ ./
+          rsync -av --delete ./dist/ ./dist/
 
       - name: Commit and push
         run: |
