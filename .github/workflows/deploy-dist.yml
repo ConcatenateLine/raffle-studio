@@ -16,7 +16,7 @@ jobs:
 
       - name: Configure bot identity
         run: |
-          git config user.name "Concatenate Line [bot]"
+          git config user.name "ConcatenateLine[bot]"
           git config user.email "bot@concatenateline.dev"
 
       - name: Download artifact from source run
