@@ -26,9 +26,7 @@ jobs:
           RUN_ID: ${{ github.event.client_payload.run_id }}
           GH_TOKEN: ${{ secrets.SOURCE_READ_TOKEN }} # fine-grained PAT with Actions: read on source repo
         run: |
-          if [ ! -d "dist" ]; then
-            mkdir dist
-          fi
+          mkdir -p dist
           # Download artifact using the API
           # 1) List artifacts for the run
           ARTIFACT_URL="https://api.github.com/repos/$OWNER/${REPO#*/}/actions/runs/$RUN_ID/artifacts"
@@ -48,6 +46,9 @@ jobs:
 
       - name: Commit and push
         run: |
+          git config --global user.name "Concatenate Line [bot]"
+          git config --global user.email "bot@concatenateline.dev"
+
           DEFAULT_BRANCH=$(git remote show origin | sed -n '/HEAD branch/s/.*: //p')
           git checkout -B "$DEFAULT_BRANCH"
           git add .
