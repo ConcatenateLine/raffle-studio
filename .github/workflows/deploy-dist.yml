@@ -114,3 +114,10 @@ jobs:
           git commit -m "Deploy dist from ${{ github.event.client_payload.source_repo }} run ${{ github.event.client_payload.run_id }}" || echo "No changes to commit"
           git push origin HEAD:"$DEFAULT_BRANCH"
 
+      - name: Dispatch static deploy
+        run: |
+          curl -s -X POST https://api.github.com/repos/${OWNER}/${REPO}/dispatches \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github+json" \
+            -d '{"event_type": "deploy_static"}'
+
