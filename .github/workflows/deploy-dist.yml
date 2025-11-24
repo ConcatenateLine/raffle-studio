@@ -116,8 +116,9 @@ jobs:
 
       - name: Dispatch static deploy
         run: |
-          curl -s -X POST https://api.github.com/repos/${OWNER}/${REPO}/dispatches \
+          curl -s -X POST \
             -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
             -H "Accept: application/vnd.github+json" \
-            -d '{"event_type": "deploy_static"}'
+            https://api.github.com/repos/${OWNER}/${REPO}/dispatches \
+            -d '{"event_type":"deploy_static"}'
 
