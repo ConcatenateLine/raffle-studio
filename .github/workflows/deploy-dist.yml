@@ -115,6 +115,9 @@ jobs:
           git push origin HEAD:"$DEFAULT_BRANCH"
 
       - name: Dispatch static deploy
+        env:
+          OWNER: ${{ github.repository_owner }}
+          REPO: ${{ github.repository }}
         run: |
           curl -s -X POST \
             -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
