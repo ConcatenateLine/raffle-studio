@@ -63,6 +63,9 @@ jobs:
 
           echo "✅ APK downloaded successfully: raffle-studio-${TAG}.apk"
 
+          # 2) Create release notes file
+          echo $CHANGELOG > releases/CHANGELOG.md
+
           # Cleanup and finalize
           echo "✅ Success! APK downloaded to releases/"
           find releases -type f | sed 's/^/   - /'
