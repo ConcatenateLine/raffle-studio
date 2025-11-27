@@ -45,7 +45,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.event.client_payload.tag_name }}
-          body: ${{ env.CHANGELOG }}
+          body: ${{ github.event.client_payload.changelog }}
           files: |
             Release-${{ github.event.client_payload.tag_name }}.txt
-            raffle-studio-${{ env.TAG }}.apk
+            raffle-studio-${{ github.event.client_payload.tag_name }}.apk
