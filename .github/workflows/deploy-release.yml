@@ -35,6 +35,12 @@ jobs:
         run: |
            curl -Lo raffle-studio-${{ env.TAG }}.apk ${{ env.URL }}
 
+           # Create release notes file
+           echo ${{ env.CHANGELOG }} > CHANGELOG.md
+
+           # finalize
+           echo "✅ Success! APK downloaded and release notes created"
+
       - name: Build release
         run: echo ${{ github.sha }} > Release-${{ github.event.client_payload.tag_name }}.txt
       
@@ -49,3 +55,4 @@ jobs:
           files: |
             Release-${{ github.event.client_payload.tag_name }}.txt
             raffle-studio-${{ github.event.client_payload.tag_name }}.apk
+            CHANGELOG.md
