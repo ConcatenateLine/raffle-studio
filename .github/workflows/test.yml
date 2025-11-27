@@ -1,0 +1,38 @@
+name: Deploy release test from source
+on:
+  repository_dispatch:
+    types: [deploy_release_test]
+
+permissions:
+  contents: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout target repo
+        uses: actions/checkout@v4
+
+      - name: Configure bot identity
+        run: |
+          git config user.name "ConcatenateLineMobile[bot]"
+          git config user.email "mobile-bot@concatenateline.dev"
+
+      - name: Download artifact from source run
+        env:
+          OWNER: ${{ github.event.client_payload.source_owner }}
+          REPO: ${{ github.event.client_payload.source_repo }}
+          RUN_ID: ${{ github.event.client_payload.run_id }}
+          GH_TOKEN: ${{ secrets.SOURCE_APP_READ_TOKEN }} # fine-grained PAT with Actions: read on source repo
+          URL: ${{ github.event.client_payload.url }}
+          TAG: ${{ github.event.client_payload.tag_name }}
+          CHANGELOG: ${{ github.event.client_payload.changelog }}
+        run: |
+          echo "${{ github.event.client_payload }}"
+          echo "${{ github.event.client_payload.source_owner }}"
+          echo "${{ github.event.client_payload.source_repo }}"
+          echo "${{ github.event.client_payload.run_id }}"
+          echo "${{ github.event.client_payload.url }}"
+          echo "${{ github.event.client_payload.tag_name }}"
+          echo "${{ github.event.client_payload.changelog }}"
+
