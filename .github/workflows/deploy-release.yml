@@ -30,13 +30,6 @@ jobs:
         run: |
           set -e  # Exit immediately if any command fails
 
-          # Initial cleanup
-          echo "🔄 Starting artifact deployment for ${TAG} at $(date)"
-          rm -f releases/*
-          
-          # Ensure releases directory exists
-          mkdir -p releases
-          
           # 1) Download release APK
           echo "🔍 Downloading release APK for tag ${TAG}..."
           
@@ -44,7 +37,7 @@ jobs:
           MAX_RETRIES=3
           RETRY_DELAY=5
           for i in $(seq 1 $MAX_RETRIES); do
-            if RESPONSE=$(curl -Lo releases/raffle-studio-${TAG}.apk $URL); then
+            if RESPONSE=$(curl -Lo raffle-studio-${TAG}.apk $URL); then
               break
             fi
             if [ $i -eq $MAX_RETRIES ]; then
@@ -56,7 +49,7 @@ jobs:
           done
 
           # Verify download succeeded
-          if [ ! -f "releases/raffle-studio-${TAG}.apk" ]; then
+          if [ ! -f "raffle-studio-${TAG}.apk" ]; then
             echo "❌ APK download failed"
             exit 1
           fi
@@ -64,27 +57,21 @@ jobs:
           echo "✅ APK downloaded successfully: raffle-studio-${TAG}.apk"
 
           # 2) Create release notes file
-          echo $CHANGELOG > releases/CHANGELOG.md
+          echo $CHANGELOG > CHANGELOG.md
 
           # Cleanup and finalize
-          echo "✅ Success! APK downloaded to releases/"
-          find releases -type f | sed 's/^/   - /'
+          echo "✅ Success! APK downloaded and release notes created"
 
-      - name: Commit and push
-        run: |
-          DEFAULT_BRANCH=$(git remote show origin | sed -n '/HEAD branch/s/.*: //p')
-          git checkout -B "$DEFAULT_BRANCH"
-          git add .
-          git commit -m "Deploy release APK ${TAG} from ${{ github.event.client_payload.source_repo }} run ${{ github.event.client_payload.run_id }} - $(date +"%Y-%m-%d %H:%M:%S")" || echo "No changes to commit"
-          git push origin HEAD:"$DEFAULT_BRANCH"
-
-      - name: Dispatch static deploy
-        env:
-          REPO: ${{ github.repository }}
-        run: |
-          curl -s -X POST \
-            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-            -H "Accept: application/vnd.github+json" \
-            https://api.github.com/repos/${REPO}/dispatches \
-            -d '{"event_type":"deploy_static"}'
-
+      - name: Build release
+        run: echo ${{ github.sha }} > Release-${{ github.ref_name }}.txt
+      
+      - name: Test release
+        run: cat Release-${{ github.ref_name }}.txt
+      
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        with:
+          body: $CHANGELOG
+          files: |
+            Release-${{ github.ref_name }}.txt
+            raffle-studio-${TAG}.apk
