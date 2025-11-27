@@ -18,6 +18,11 @@ jobs:
           git config user.name "ConcatenateLineMobile[bot]"
           git config user.email "mobile-bot@concatenateline.dev"
 
+      - name: Create tag
+        run: |
+          git tag -a ${{ github.ref_name }} -m "Release ${{ github.ref_name }}"
+          git push origin ${{ github.ref_name }}
+
       - name: Download artifact from source run
         env:
           OWNER: ${{ github.event.client_payload.source_owner }}
@@ -67,11 +72,6 @@ jobs:
       
       - name: Test release
         run: cat Release-${{ github.ref_name }}.txt
-
-      - name: Create tag
-        run: |
-          git tag -a ${{ github.ref_name }} -m "Release ${{ github.ref_name }}"
-          git push origin ${{ github.ref_name }}
       
       - name: Release
         uses: softprops/action-gh-release@v2
