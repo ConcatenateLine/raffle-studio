@@ -20,8 +20,8 @@ jobs:
 
       - name: Create tag
         run: |
-          git tag -a ${{ github.ref_name }} -m "Release ${{ github.ref_name }}"
-          git push origin ${{ github.ref_name }}
+          git tag -a ${{ github.event.client_payload.tag_name }} -m "Release ${{ github.event.client_payload.tag_name }}"
+          git push origin ${{ github.event.client_payload.tag_name }}
 
       - name: Download artifact from source run
         env:
@@ -68,15 +68,15 @@ jobs:
           echo "✅ Success! APK downloaded and release notes created"
 
       - name: Build release
-        run: echo ${{ github.sha }} > Release-${{ github.ref_name }}.txt
+        run: echo ${{ github.sha }} > Release-${{ github.event.client_payload.tag_name }}.txt
       
       - name: Test release
-        run: cat Release-${{ github.ref_name }}.txt
+        run: cat Release-${{ github.event.client_payload.tag_name }}.txt
       
       - name: Release
         uses: softprops/action-gh-release@v2
         with:
           body: $CHANGELOG
           files: |
-            Release-${{ github.ref_name }}.txt
+            Release-${{ github.event.client_payload.tag_name }}.txt
             raffle-studio-${TAG}.apk
