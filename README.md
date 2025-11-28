@@ -4,7 +4,7 @@ Create and print beautiful raffle tickets directly from your mobile device. Raff
 
 **[Website](https://concatenateline.github.io/raffle-studio/)** | **[Guide](https://concatenateline.github.io/raffle-studio/guide)**
 
-![Raffle Studio Banner](/dist/adaptive-icon.png)
+![Raffle Studio Banner](/assets/raffle-studio-banner.png)
 
 ## ✨ Features
 
